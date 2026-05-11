@@ -44,6 +44,7 @@ def train():
         default_root_dir=model_dir, # Checkpoints and logs will be saved here
         accelerator="auto",         # Automatically choose GPU if available, else CPU
         devices="auto",
+        log_every_n_steps=1,        # Added this to prevent the logging interval warning on small datasets
     )
 
     # --- 5. Train the Model ---

@@ -23,7 +23,16 @@ def get_data_loaders(data_dir, batch_size=32):
     # 2. Load the Training Dataset
     # ImageFolder automatically infers the classes based on the folder names.
     train_dataset = ImageFolder(root=train_dir, transform=transform)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    
+    # Using num_workers=3 based on PyTorch Lightning's recommendation for better performance.
+    # Set persistent_workers=True to speed up epoch loading.
+    train_loader = DataLoader(
+        train_dataset, 
+        batch_size=batch_size, 
+        shuffle=True, 
+        num_workers=3,
+        persistent_workers=True
+    )
     
     # 3. Load the Validation Dataset (Optional)
     val_loader = None
@@ -35,6 +44,12 @@ def get_data_loaders(data_dir, batch_size=32):
                 f"Train classes: {train_dataset.classes}; "
                 f"Validation classes: {val_dataset.classes}"
             )
-        val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+        val_loader = DataLoader(
+            val_dataset, 
+            batch_size=batch_size, 
+            shuffle=False, 
+            num_workers=3,
+            persistent_workers=True
+        )
     
     return train_loader, val_loader, train_dataset.classes

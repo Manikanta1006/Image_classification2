@@ -81,3 +81,21 @@ streamlit run app.py
 ```
 
 Upload an image in the app to see the predicted class, confidence score, and class probability chart.
+
+### Run Flask + React UI
+
+After training finishes, you can also run the Flask app with a React upload UI:
+
+```bash
+python flask_app.py --host 0.0.0.0 --port 8000
+```
+
+Open the URL shown by Lightning AI. Upload a cat or dog image and the app will show the predicted class, confidence percentage, and probability for each class.
+
+The Flask API endpoint is:
+
+```text
+POST /predict
+```
+
+Send the image file using the form field name `image`.
