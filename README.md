@@ -1,0 +1,83 @@
+# Image Classification AI/ML Project
+
+Welcome to your Image Classification project! This repository is set up with a clean, beginner-friendly structure using **PyTorch**. 
+
+## Folder Structure
+
+```text
+Image_classification/
+│
+├── data/                   # Put your raw image data here
+│   ├── train/              # Training images
+│   │   ├── class_a/        # E.g., folder full of "cat" images
+│   │   └── class_b/        # E.g., folder full of "dog" images
+│   └── val/                # Validation images (Optional)
+│       ├── class_a/
+│       └── class_b/
+│
+├── models/                 # Trained model weights (.pth files) will be saved here automatically
+│
+├── src/                    # Source code directory
+│   ├── dataset.py          # Code for reading and transforming images
+│   ├── model.py            # Neural Network Architecture (SimpleCNN)
+│   └── train.py            # The main training script
+│
+├── requirements.txt        # Python dependencies
+└── README.md               # You are here
+```
+
+## How to use this project
+
+### 1. Install Dependencies
+Make sure you have Python installed. Open your terminal in this directory and run:
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Prepare your Data
+You need to organize your images into folders based on their categories. 
+1. Create a `data` folder in the root directory.
+2. Inside `data`, create a `train` folder.
+3. Inside `train`, create one folder for **each category** you want to classify, and place the corresponding images inside. 
+
+**Example:** If you are classifying Cats vs Dogs:
+* `data/train/cats/` (put all cat images here)
+* `data/train/dogs/` (put all dog images here)
+
+### 3. Train the Model
+Once your images are in place, you can train your Artificial Intelligence by running:
+```bash
+python src/train.py
+```
+
+The script will automatically detect the classes based on your folder names, train a Convolutional Neural Network (CNN) for 10 epochs, and save the learned weights into a `models/` folder.
+
+## Run on Lightning AI Studio
+
+No special deployment file is required for training this project on Lightning AI Studio. Upload or clone this project into a Studio, then run:
+
+```bash
+pip install -r requirements.txt
+python src/train.py
+```
+
+Make sure your dataset is available inside:
+
+```text
+data/train/<class_name>/
+data/val/<class_name>/
+```
+
+The class folder names in `data/val` should match the names in `data/train`. For example, if training uses `cats` and `dogs`, validation should also use `cats` and `dogs`.
+
+If you push this project to GitHub, note that `data/` is ignored by `.gitignore`, so upload the dataset separately in Lightning AI Studio or remove `data/` from `.gitignore` only if you really want the images committed.
+
+### See prediction output
+
+After training finishes, run the Streamlit app:
+
+```bash
+streamlit run app.py
+```
+
+Upload an image in the app to see the predicted class, confidence score, and class probability chart.

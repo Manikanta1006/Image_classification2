@@ -1,0 +1,7 @@
+torch
+torchvision
+matplotlib
+pillow
+lightning==2.6.1
+streamlit
+
