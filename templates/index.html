@@ -74,6 +74,10 @@
         cursor: pointer;
       }
 
+      .secondaryButton {
+        background: #117864;
+      }
+
       button:disabled {
         background: #9aa8bc;
         cursor: not-allowed;
@@ -86,6 +90,10 @@
         border-radius: 8px;
         background: #ffffff;
         border: 1px solid #dfe5ef;
+      }
+
+      .annotatedPreview {
+        max-height: none;
       }
 
       .resultGrid {
@@ -128,6 +136,11 @@
         margin-top: 20px;
       }
 
+      .sectionTitle {
+        margin: 0 0 14px;
+        font-size: 18px;
+      }
+
       .barRow {
         margin-top: 14px;
       }
@@ -149,6 +162,21 @@
         color: #596579;
         font-size: 12px;
         font-weight: 600;
+      }
+
+      .detectionList {
+        display: grid;
+        gap: 10px;
+      }
+
+      .detectionItem {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        border: 1px solid #dfe5ef;
+        border-radius: 8px;
+        padding: 12px;
+        background: #fbfcff;
       }
 
       .barTrack {
@@ -211,13 +239,16 @@
         const [file, setFile] = useState(null);
         const [previewUrl, setPreviewUrl] = useState("");
         const [result, setResult] = useState(null);
+        const [detectionResult, setDetectionResult] = useState(null);
         const [error, setError] = useState("");
         const [loading, setLoading] = useState(false);
+        const [detecting, setDetecting] = useState(false);
 
         function handleFileChange(event) {
           const selectedFile = event.target.files[0];
           setFile(selectedFile || null);
           setResult(null);
+          setDetectionResult(null);
           setError("");
 
           if (previewUrl) {
@@ -263,6 +294,38 @@
           }
         }
 
+        async function handleDetect() {
+          if (!file) {
+            setError("Please choose an image first.");
+            return;
+          }
+
+          setDetecting(true);
+          setError("");
+          setDetectionResult(null);
+
+          const formData = new FormData();
+          formData.append("image", file);
+
+          try {
+            const response = await fetch("/detect", {
+              method: "POST",
+              body: formData,
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.error || "Object detection failed.");
+            }
+
+            setDetectionResult(data);
+          } catch (err) {
+            setError(err.message);
+          } finally {
+            setDetecting(false);
+          }
+        }
+
         return (
           <main className="shell">
             <section className="panel">
@@ -272,7 +335,10 @@
               <div className="uploadBox">
                 <input type="file" accept="image/*" onChange={handleFileChange} />
                 <button onClick={handlePredict} disabled={loading}>
-                  {loading ? "Checking image..." : "Predict"}
+                  {loading ? "Checking image..." : "Predict Label"}
+                </button>
+                <button className="secondaryButton" onClick={handleDetect} disabled={detecting}>
+                  {detecting ? "Finding objects..." : "Detect Objects"}
                 </button>
               </div>
 
@@ -284,6 +350,43 @@
                 <img className="preview" src={previewUrl} alt="Uploaded preview" />
               ) : (
                 <div className="empty">Choose an image to start.</div>
+              )}
+
+              {detectionResult && (
+                <div className="bars">
+                  <h2 className="sectionTitle">Detected Objects</h2>
+                  <img
+                    className="preview annotatedPreview"
+                    src={detectionResult.annotatedImage}
+                    alt="Detected objects"
+                  />
+                  <div className="resultGrid">
+                    <div className="metric">
+                      <span className="label">Uploaded Image</span>
+                      <span className="value fileValue">{detectionResult.uploadedFilename}</span>
+                    </div>
+                    <div className="metric">
+                      <span className="label">Model</span>
+                      <span className="value fileValue">{detectionResult.model}</span>
+                    </div>
+                    <div className="metric">
+                      <span className="label">Objects Found</span>
+                      <span className="value">{detectionResult.detectionCount}</span>
+                    </div>
+                  </div>
+
+                  <div className="detectionList">
+                    {detectionResult.detections.map((item, index) => (
+                      <div className="detectionItem" key={`${item.label}-${index}`}>
+                        <span>
+                          <strong>{item.label}</strong>
+                          <span className="barMeta"> Label {item.labelId}</span>
+                        </span>
+                        <span>{item.confidencePercent}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
 
               {result && (

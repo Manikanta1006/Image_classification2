@@ -63,6 +63,21 @@ data/train/dogs/  -> Label 1: dogs
 
 During prediction, the Flask + React UI shows the uploaded file name, predicted label id, predicted label name, confidence percentage, and probability for every label.
 
+### Object detection with boxes
+
+The Flask + React UI also includes object detection using YOLO. This is different from classification:
+
+* Classification predicts one image-level label, such as `cats` or `dogs`.
+* Object detection finds objects inside the image and draws bounding boxes around them.
+
+Run the Flask app and click **Detect Objects** after uploading an image:
+
+```bash
+python flask_app.py --host 0.0.0.0 --port 8000
+```
+
+The first detection run downloads the pretrained YOLO model file `yolov8n.pt`. This pretrained model can detect common COCO objects such as cars, buses, trucks, people, and traffic lights. For custom objects such as specific road signs, train a custom YOLO detection dataset with bounding box labels.
+
 ## Run on Lightning AI Studio
 
 No special deployment file is required for training this project on Lightning AI Studio. Upload or clone this project into a Studio, then run:
@@ -102,6 +117,7 @@ python flask_app.py --host 0.0.0.0 --port 8000
 ```
 
 Open the URL shown by Lightning AI. Upload a cat or dog image and the app will show the predicted class, confidence percentage, and probability for each class.
+You can also click **Detect Objects** to draw bounding boxes on the uploaded image.
 
 The Flask API endpoint is:
 

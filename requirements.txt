@@ -5,4 +5,5 @@ pillow
 lightning==2.6.1
 streamlit
 flask
+ultralytics
 
