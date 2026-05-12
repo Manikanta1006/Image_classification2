@@ -19,6 +19,14 @@ app = Flask(__name__)
 model_cache = {"model": None, "classes": None, "checkpoint": None}
 
 
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return response
+
+
 def find_latest_checkpoint():
     checkpoints = list(MODEL_DIR.glob("lightning_logs/**/checkpoints/*.ckpt"))
     if not checkpoints:

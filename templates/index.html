@@ -298,7 +298,7 @@
                         <span>{item.percent}%</span>
                       </div>
                       <div className="barTrack">
-                        <div className="barFill" style={{ width: `${item.percent}%` }}></div>
+                        <div className="barFill" style={% raw %}{{ width: `${item.percent}%` }}{% endraw %}></div>
                       </div>
                     </div>
                   ))}
