@@ -52,6 +52,17 @@ python src/train.py
 
 The script will automatically detect the classes based on your folder names, train a Convolutional Neural Network (CNN) for 10 epochs, and save the learned weights into a `models/` folder.
 
+### Labeling concept
+
+This project uses folder names as image labels. Each folder inside `data/train/` becomes one class label:
+
+```text
+data/train/cats/  -> Label 0: cats
+data/train/dogs/  -> Label 1: dogs
+```
+
+During prediction, the Flask + React UI shows the uploaded file name, predicted label id, predicted label name, confidence percentage, and probability for every label.
+
 ## Run on Lightning AI Studio
 
 No special deployment file is required for training this project on Lightning AI Studio. Upload or clone this project into a Studio, then run:

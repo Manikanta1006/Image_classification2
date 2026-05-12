@@ -41,6 +41,21 @@ def load_classes():
         return json.load(f)
 
 
+def format_label_name(class_name):
+    return class_name.replace("_", " ").replace("-", " ").title()
+
+
+def build_labels(classes):
+    return [
+        {
+            "id": index,
+            "name": class_name,
+            "displayName": format_label_name(class_name),
+        }
+        for index, class_name in enumerate(classes)
+    ]
+
+
 def get_model():
     classes = load_classes()
     checkpoint = find_latest_checkpoint()
@@ -95,6 +110,7 @@ def health():
         {
             "ready": model is not None,
             "classes": classes or [],
+            "labels": build_labels(classes or []),
             "checkpoint": checkpoint,
         }
     )
@@ -137,9 +153,14 @@ def predict():
         probabilities = torch.softmax(outputs, dim=1)[0]
         confidence, predicted_index = torch.max(probabilities, dim=0)
 
+    labels = build_labels(classes)
+    predicted_label = labels[predicted_index.item()]
+
     probability_list = [
         {
+            "labelId": labels[index]["id"],
             "className": class_name,
+            "displayName": labels[index]["displayName"],
             "probability": round(float(probabilities[index].item()), 6),
             "percent": round(float(probabilities[index].item()) * 100, 2),
         }
@@ -150,6 +171,7 @@ def predict():
         {
             "uploadedFilename": image_file.filename,
             "prediction": classes[predicted_index.item()],
+            "predictedLabel": predicted_label,
             "confidence": round(float(confidence.item()), 6),
             "confidencePercent": round(float(confidence.item()) * 100, 2),
             "probabilities": probability_list,

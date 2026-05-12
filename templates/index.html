@@ -90,7 +90,7 @@
 
       .resultGrid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 16px;
         margin-bottom: 20px;
       }
@@ -137,6 +137,18 @@
         justify-content: space-between;
         gap: 12px;
         font-weight: 700;
+      }
+
+      .barLabel {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .barMeta {
+        color: #596579;
+        font-size: 12px;
+        font-weight: 600;
       }
 
       .barTrack {
@@ -255,7 +267,7 @@
           <main className="shell">
             <section className="panel">
               <h1>Image Classifier</h1>
-              <p>Upload one image and the trained model will show the uploaded file name, predicted class, and confidence.</p>
+              <p>Upload one image and the trained model will show the uploaded file name, predicted label, and confidence.</p>
 
               <div className="uploadBox">
                 <input type="file" accept="image/*" onChange={handleFileChange} />
@@ -282,8 +294,12 @@
                       <span className="value fileValue">{result.uploadedFilename}</span>
                     </div>
                     <div className="metric">
-                      <span className="label">Predicted Name</span>
-                      <span className="value">{result.prediction}</span>
+                      <span className="label">Label ID</span>
+                      <span className="value">{result.predictedLabel.id}</span>
+                    </div>
+                    <div className="metric">
+                      <span className="label">Predicted Label</span>
+                      <span className="value">{result.predictedLabel.displayName}</span>
                     </div>
                     <div className="metric">
                       <span className="label">Accurate Value</span>
@@ -292,13 +308,16 @@
                   </div>
 
                   {result.probabilities.map((item) => (
-                    <div className="barRow" key={item.className}>
+                    <div className="barRow" key={item.labelId}>
                       <div className="barHeader">
-                        <span>{item.className}</span>
+                        <span className="barLabel">
+                          <span>{item.displayName}</span>
+                          <span className="barMeta">Label {item.labelId}: {item.className}</span>
+                        </span>
                         <span>{item.percent}%</span>
                       </div>
                       <div className="barTrack">
-                        <div className="barFill" style={% raw %}{{ width: `${item.percent}%` }}{% endraw %}></div>
+                        <div className="barFill" style={{ width: `${item.percent}%` }}></div>
                       </div>
                     </div>
                   ))}
