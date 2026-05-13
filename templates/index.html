@@ -4,9 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cat Dog Classifier</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
       :root {
         color: #182033;
@@ -94,6 +91,7 @@
 
       .annotatedPreview {
         max-height: none;
+        margin-bottom: 20px;
       }
 
       .resultGrid {
@@ -213,6 +211,10 @@
         padding: 24px;
       }
 
+      .hidden {
+        display: none;
+      }
+
       @media (max-width: 820px) {
         .shell {
           grid-template-columns: 1fr;
@@ -230,208 +232,227 @@
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <main class="shell">
+      <section class="panel">
+        <h1>Image Classifier</h1>
+        <p>Upload one image and the trained model will show the uploaded file name, predicted label, and confidence.</p>
 
-    <script type="text/babel">
-      const { useState } = React;
+        <div class="uploadBox">
+          <input id="imageInput" type="file" accept="image/*" />
+          <button id="predictButton" type="button">Predict Label</button>
+          <button id="detectButton" class="secondaryButton" type="button">Detect Objects</button>
+        </div>
 
-      function App() {
-        const [file, setFile] = useState(null);
-        const [previewUrl, setPreviewUrl] = useState("");
-        const [result, setResult] = useState(null);
-        const [detectionResult, setDetectionResult] = useState(null);
-        const [error, setError] = useState("");
-        const [loading, setLoading] = useState(false);
-        const [detecting, setDetecting] = useState(false);
+        <div id="errorBox" class="error hidden"></div>
+      </section>
 
-        function handleFileChange(event) {
-          const selectedFile = event.target.files[0];
-          setFile(selectedFile || null);
-          setResult(null);
-          setDetectionResult(null);
-          setError("");
+      <section class="workspace">
+        <div id="emptyState" class="empty">Choose an image to start.</div>
+        <img id="previewImage" class="preview hidden" alt="Uploaded preview" />
+        <div id="output"></div>
+      </section>
+    </main>
 
-          if (previewUrl) {
-            URL.revokeObjectURL(previewUrl);
-          }
+    <script>
+      const imageInput = document.getElementById("imageInput");
+      const predictButton = document.getElementById("predictButton");
+      const detectButton = document.getElementById("detectButton");
+      const errorBox = document.getElementById("errorBox");
+      const emptyState = document.getElementById("emptyState");
+      const previewImage = document.getElementById("previewImage");
+      const output = document.getElementById("output");
 
-          if (selectedFile) {
-            setPreviewUrl(URL.createObjectURL(selectedFile));
-          } else {
-            setPreviewUrl("");
-          }
-        }
+      let selectedFile = null;
+      let previewUrl = "";
 
-        async function handlePredict() {
-          if (!file) {
-            setError("Please choose an image first.");
-            return;
-          }
-
-          setLoading(true);
-          setError("");
-          setResult(null);
-
-          const formData = new FormData();
-          formData.append("image", file);
-
-          try {
-            const response = await fetch("/predict", {
-              method: "POST",
-              body: formData,
-            });
-            const data = await response.json();
-
-            if (!response.ok) {
-              throw new Error(data.error || "Prediction failed.");
-            }
-
-            setResult(data);
-          } catch (err) {
-            setError(err.message);
-          } finally {
-            setLoading(false);
-          }
-        }
-
-        async function handleDetect() {
-          if (!file) {
-            setError("Please choose an image first.");
-            return;
-          }
-
-          setDetecting(true);
-          setError("");
-          setDetectionResult(null);
-
-          const formData = new FormData();
-          formData.append("image", file);
-
-          try {
-            const response = await fetch("/detect", {
-              method: "POST",
-              body: formData,
-            });
-            const data = await response.json();
-
-            if (!response.ok) {
-              throw new Error(data.error || "Object detection failed.");
-            }
-
-            setDetectionResult(data);
-          } catch (err) {
-            setError(err.message);
-          } finally {
-            setDetecting(false);
-          }
-        }
-
-        return (
-          <main className="shell">
-            <section className="panel">
-              <h1>Image Classifier</h1>
-              <p>Upload one image and the trained model will show the uploaded file name, predicted label, and confidence.</p>
-
-              <div className="uploadBox">
-                <input type="file" accept="image/*" onChange={handleFileChange} />
-                <button onClick={handlePredict} disabled={loading}>
-                  {loading ? "Checking image..." : "Predict Label"}
-                </button>
-                <button className="secondaryButton" onClick={handleDetect} disabled={detecting}>
-                  {detecting ? "Finding objects..." : "Detect Objects"}
-                </button>
-              </div>
-
-              {error && <div className="error">{error}</div>}
-            </section>
-
-            <section className="workspace">
-              {previewUrl ? (
-                <img className="preview" src={previewUrl} alt="Uploaded preview" />
-              ) : (
-                <div className="empty">Choose an image to start.</div>
-              )}
-
-              {detectionResult && (
-                <div className="bars">
-                  <h2 className="sectionTitle">Detected Objects</h2>
-                  <img
-                    className="preview annotatedPreview"
-                    src={detectionResult.annotatedImage}
-                    alt="Detected objects"
-                  />
-                  <div className="resultGrid">
-                    <div className="metric">
-                      <span className="label">Uploaded Image</span>
-                      <span className="value fileValue">{detectionResult.uploadedFilename}</span>
-                    </div>
-                    <div className="metric">
-                      <span className="label">Model</span>
-                      <span className="value fileValue">{detectionResult.model}</span>
-                    </div>
-                    <div className="metric">
-                      <span className="label">Objects Found</span>
-                      <span className="value">{detectionResult.detectionCount}</span>
-                    </div>
-                  </div>
-
-                  <div className="detectionList">
-                    {detectionResult.detections.map((item, index) => (
-                      <div className="detectionItem" key={`${item.label}-${index}`}>
-                        <span>
-                          <strong>{item.label}</strong>
-                          <span className="barMeta"> Label {item.labelId}</span>
-                        </span>
-                        <span>{item.confidencePercent}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {result && (
-                <div className="bars">
-                  <div className="resultGrid">
-                    <div className="metric">
-                      <span className="label">Uploaded Image</span>
-                      <span className="value fileValue">{result.uploadedFilename}</span>
-                    </div>
-                    <div className="metric">
-                      <span className="label">Label ID</span>
-                      <span className="value">{result.predictedLabel.id}</span>
-                    </div>
-                    <div className="metric">
-                      <span className="label">Predicted Label</span>
-                      <span className="value">{result.predictedLabel.displayName}</span>
-                    </div>
-                    <div className="metric">
-                      <span className="label">Accurate Value</span>
-                      <span className="value">{result.confidencePercent}%</span>
-                    </div>
-                  </div>
-
-                  {result.probabilities.map((item) => (
-                    <div className="barRow" key={item.labelId}>
-                      <div className="barHeader">
-                        <span className="barLabel">
-                          <span>{item.displayName}</span>
-                          <span className="barMeta">Label {item.labelId}: {item.className}</span>
-                        </span>
-                        <span>{item.percent}%</span>
-                      </div>
-                      <div className="barTrack">
-                        <div className="barFill" style={{ width: `${item.percent}%` }}></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          </main>
-        );
+      function showError(message) {
+        errorBox.textContent = message;
+        errorBox.classList.remove("hidden");
       }
 
-      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+      function clearError() {
+        errorBox.textContent = "";
+        errorBox.classList.add("hidden");
+      }
+
+      function resetOutput() {
+        output.innerHTML = "";
+      }
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "\"": "&quot;",
+          "'": "&#039;",
+        })[char]);
+      }
+
+      function requireFile() {
+        if (!selectedFile) {
+          showError("Please choose an image first.");
+          return false;
+        }
+        return true;
+      }
+
+      function makeFormData() {
+        const formData = new FormData();
+        formData.append("image", selectedFile);
+        return formData;
+      }
+
+      async function postImage(endpoint) {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          body: makeFormData(),
+        });
+        const contentType = response.headers.get("content-type") || "";
+        const data = contentType.includes("application/json")
+          ? await response.json()
+          : { error: await response.text() };
+
+        if (!response.ok) {
+          throw new Error(data.error || "Request failed.");
+        }
+
+        return data;
+      }
+
+      function renderPrediction(result) {
+        const metrics = [
+          ["Uploaded Image", result.uploadedFilename, "fileValue"],
+          ["Label ID", result.predictedLabel.id, ""],
+          ["Predicted Label", result.predictedLabel.displayName, ""],
+          ["Accurate Value", `${result.confidencePercent}%`, ""],
+        ].map(([label, value, valueClass]) => `
+          <div class="metric">
+            <span class="label">${escapeHtml(label)}</span>
+            <span class="value ${valueClass}">${escapeHtml(value)}</span>
+          </div>
+        `).join("");
+
+        const bars = result.probabilities.map((item) => `
+          <div class="barRow">
+            <div class="barHeader">
+              <span class="barLabel">
+                <span>${escapeHtml(item.displayName)}</span>
+                <span class="barMeta">Label ${escapeHtml(item.labelId)}: ${escapeHtml(item.className)}</span>
+              </span>
+              <span>${escapeHtml(item.percent)}%</span>
+            </div>
+            <div class="barTrack">
+              <div class="barFill" style="width: ${Math.max(0, Math.min(100, Number(item.percent)))}%"></div>
+            </div>
+          </div>
+        `).join("");
+
+        output.innerHTML = `
+          <div class="bars">
+            <div class="resultGrid">${metrics}</div>
+            ${bars}
+          </div>
+        `;
+      }
+
+      function renderDetection(result) {
+        const detections = result.detections.length
+          ? result.detections.map((item, index) => `
+              <div class="detectionItem">
+                <span>
+                  <strong>${escapeHtml(item.label)}</strong>
+                  <span class="barMeta"> Label ${escapeHtml(item.labelId)}</span>
+                </span>
+                <span>${escapeHtml(item.confidencePercent)}%</span>
+              </div>
+            `).join("")
+          : "<p>No objects found with the current confidence threshold.</p>";
+
+        output.innerHTML = `
+          <div class="bars">
+            <h2 class="sectionTitle">Detected Objects</h2>
+            <img class="preview annotatedPreview" src="${result.annotatedImage}" alt="Detected objects" />
+            <div class="resultGrid">
+              <div class="metric">
+                <span class="label">Uploaded Image</span>
+                <span class="value fileValue">${escapeHtml(result.uploadedFilename)}</span>
+              </div>
+              <div class="metric">
+                <span class="label">Model</span>
+                <span class="value fileValue">${escapeHtml(result.model)}</span>
+              </div>
+              <div class="metric">
+                <span class="label">Objects Found</span>
+                <span class="value">${escapeHtml(result.detectionCount)}</span>
+              </div>
+            </div>
+            <div class="detectionList">${detections}</div>
+          </div>
+        `;
+      }
+
+      imageInput.addEventListener("change", () => {
+        selectedFile = imageInput.files[0] || null;
+        clearError();
+        resetOutput();
+
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+        }
+
+        if (selectedFile) {
+          previewUrl = URL.createObjectURL(selectedFile);
+          previewImage.src = previewUrl;
+          previewImage.classList.remove("hidden");
+          emptyState.classList.add("hidden");
+        } else {
+          previewUrl = "";
+          previewImage.removeAttribute("src");
+          previewImage.classList.add("hidden");
+          emptyState.classList.remove("hidden");
+        }
+      });
+
+      predictButton.addEventListener("click", async () => {
+        if (!requireFile()) {
+          return;
+        }
+
+        clearError();
+        resetOutput();
+        predictButton.disabled = true;
+        predictButton.textContent = "Checking image...";
+
+        try {
+          renderPrediction(await postImage("/predict"));
+        } catch (error) {
+          showError(error.message);
+        } finally {
+          predictButton.disabled = false;
+          predictButton.textContent = "Predict Label";
+        }
+      });
+
+      detectButton.addEventListener("click", async () => {
+        if (!requireFile()) {
+          return;
+        }
+
+        clearError();
+        resetOutput();
+        detectButton.disabled = true;
+        detectButton.textContent = "Finding objects...";
+
+        try {
+          renderDetection(await postImage("/detect"));
+        } catch (error) {
+          showError(error.message);
+        } finally {
+          detectButton.disabled = false;
+          detectButton.textContent = "Detect Objects";
+        }
+      });
     </script>
   </body>
 </html>
